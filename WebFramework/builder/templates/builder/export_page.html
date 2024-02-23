@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+#combinedIconBtn i {
+  margin-right: 5px; /* Adjusts space between icons */
+}
+
+#combinedIconBtn {
+  font-size: 20px; /* Adjusts size of icons */
+  border: none; /* Optional: removes button border */
+  background: none; /* Optional: removes button background */
+  cursor: pointer; /* Changes cursor to pointer on hover */
+}
+
+/* Optional: Adjustments for when the button is hovered or focused */
+#combinedIconBtn:hover, #combinedIconBtn:focus {
+  outline: none; /* Removes outline on focus for a cleaner look */
+}
+
+</style>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jQuery UI Example</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://kit.fontawesome.com/8097e3cf9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- Interaction events -->
+<div id="fontStyleBar" style="position: fixed; right: 20px; top: 20px;">
+  <button id="btnBold"><i class="fa-solid fa-bold"></i></button>
+  <button id="btnItalic"><i class="fa-solid fa-italic"></i></button>
+  <button id="btnColor"><i class="fa-solid fa-palette"></i></button>
+  <input type="color" id="fontColorPicker" hidden>
+</div>
+
+<button id="btnAddImage"><i class="fa-regular fa-image"></i></button>
+
+  <!-- Button to spawn new draggable/resizable paragraph -->
+  <button id="addParagraphBtn">  
+  <i class="fa-solid fa-plus"></i>
+  <i class="fa-solid fa-text-height"></i>
+  </button>
+  
+  <!-- exportable viewport -->
+<div id="contentArea">
+  <div id="container" style="min-height: 400px; width: 100%; border: 1px solid #ccc;"></div>
+</div>
+     <button id="exportBtn"><i class="fa-solid fa-file-export"></i></button>
+
+  <script>
+  $('#btnAddImage').click(function() {
+    var imageUrl = prompt("Please enter the image URL:", "http://");
+    if (imageUrl) {
+        insertImage(imageUrl);
+    }
+});
+
+function downloadHtml(htmlContent, filename) {
+  var blob = new Blob([htmlContent], {type: 'text/html'});
+  var downloadLink = document.createElement('a');
+  downloadLink.href = window.URL.createObjectURL(blob);
+  downloadLink.download = filename;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+$('#exportBtn').click(function() {
+  var htmlContent = exportContent();
+  downloadHtml(htmlContent, 'exportedContent.html'); // Assuming you're using the downloadHtml function from before
+});
+
+function exportContent() {
+    var $contentClone = $('#contentArea').clone();
+
+    // Remove the resizable and draggable attributes/classes
+    $contentClone.find('.ui-resizable-handle').remove();
+    $contentClone.find('.ui-draggable-handle').removeClass('ui-draggable-handle');
+
+    // Remove contenteditable attributes to prevent editing in the exported content
+    $contentClone.find('[contenteditable]').removeAttr('contenteditable');
+
+    // Return the HTML content of the clone as a string
+    return $contentClone.html(); // If you want only the inner HTML, not the container itself
+}
+
+
+function prepareForExport($clone) {
+    // Adjustments that ensure the layout remains intact
+    // Example: Unwrap images if they're wrapped in elements that could disrupt the layout
+    $clone.find('p img').each(function() {
+        var $thisImg = $(this);
+        if ($thisImg.parent().is('p')) {
+            $thisImg.unwrap();
+        }
+    });
+
+    // If you're wrapping images in divs, ensure it doesn't disrupt the text region layout
+    $clone.find('img').wrap('<div style="text-align: center;"></div>');
+}
+
+// Trigger export on button click
+$('#exportBtn').click(function() {
+    var htmlContent = exportContent();
+    downloadHtml(htmlContent, 'exportedContent.html');
+});
+
+
+
+
+function insertImage(imageUrl) {
+    if (lastFocusedElement) {
+        var imgHtml = `<img src="${imageUrl}" style="max-width: 100%; height: auto;">`;
+        $(lastFocusedElement).append(imgHtml);
+    } else {
+        // Fallback: Insert the image at a specific location if no text element was focused
+        // For example, appending to the container directly or to a specific default area
+        $("#container").append(`<img src="${imageUrl}" style="max-width: 100%; height: auto;">`);
+		$("img").on("load", function() {
+			$(this).draggable().resizable({
+			  aspectRatio: true
+			});
+});
+
+    }
+}
+
+$(document).ready(function() {
+    // Variable to prevent conflict between single and double clicks
+    let timer = 0;
+    let delay = 200; // Milliseconds
+    let prevent = false;
+
+    // Function to enable dragging
+    function makeDraggable(element) {
+        $(element).attr('contenteditable', 'false'); // Ensure it's not editable
+        // Initialize draggable here if it's not already initialized
+        // Or perform any action related to the drag functionality
+    }
+
+    // Function to enable editing
+    function makeEditable(element) {
+        $(element).attr('contenteditable', 'false').focus(); // Make it editable and focus
+        // Disable draggable when in edit mode to prevent conflicts
+    }
+});
+
+$(function() {
+    // Setup delay and prevention mechanism for distinguishing between click and dblclick
+    let timer = 0;
+    let delay = 200; // Milliseconds
+    let prevent = false;
+
+    // Function to add a new draggable/resizable paragraph
+    function addDraggableParagraph() {
+        var $newParagraph = $('<p class="editable-text">Editable Text</p>').css({
+            'width': '200px',
+            'min-height': '50px', // Ensure there's enough room for text
+            'background-color': 'lightgreen',
+            'padding': '10px',
+            'cursor': 'text' // Change cursor to indicate text can be edited
+        }).draggable({
+            cancel: "p[contenteditable]" // Prevents dragging when editing text
+        }).resizable({
+            aspectRatio: true
+        });
+
+        // Append the new paragraph to the container
+        $("#container").append($newParagraph);
+
+        // Attach click and dblclick events to the new paragraph
+        $newParagraph.click(function() {
+            const _this = this; // Cache this
+            timer = setTimeout(function() {
+                if (!prevent) {
+                    // Single click, make sure it's not editable
+                    $(_this).attr('contenteditable', 'false');
+                }
+                prevent = false;
+            }, delay);
+        }).dblclick(function() {
+            clearTimeout(timer);
+            prevent = true;
+            // Double click, make editable
+            $(this).attr('contenteditable', 'true').focus();
+        });
+    }
+
+    // Example usage: Adding a paragraph on some action, e.g., button click
+    $('#addParagraphBtn').click(function() {
+        addDraggableParagraph();
+    });
+});
+
+      // Initialize the first draggable/resizable element
+      $("#draggable").draggable().resizable();
+	
+	let lastFocusedElement = null;
+
+	$(document).on('focus', '[contenteditable]', function() {
+		lastFocusedElement = this;
+	});
+
+	$('#btnBold').click(function() {
+		if (lastFocusedElement) document.execCommand('bold', false, null);
+	});
+
+	$('#btnItalic').click(function() {
+		if (lastFocusedElement) document.execCommand('italic', false, null);
+	});
+
+	$('#btnColor').click(function() {
+		// Trigger color picker
+		$('#fontColorPicker').click();
+	});
+
+	$('#fontColorPicker').on('input', function() {
+		let color = $(this).val();
+		if (lastFocusedElement) document.execCommand('foreColor', false, color);
+	});
+
+  </script>
+</body>
+</html>

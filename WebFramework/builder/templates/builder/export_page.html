@@ -16,6 +16,38 @@
 #combinedIconBtn:hover, #combinedIconBtn:focus {
   outline: none; /* Removes outline on focus for a cleaner look */
 }
+.selected-for-deletion {
+    outline: 2px solid red; /* or any style you prefer */
+}
+
+
+.text-region-controls
+{
+
+}
+.text-region
+{
+        width: 200px;
+        min-height: 50px;
+        background-color: lightgreen;
+        padding: 10px;
+        cursor: text;
+}
+.animation-control-btn {
+  cursor: pointer;
+  /* Additional styling here */
+}
+
+.animation-dropdown {
+  /* Additional styling here */
+}
+.animation-play-btn {
+    cursor: pointer;
+    /* Add more styling here to match your UI's theme */
+}
+.selected-for-css {
+    outline: 2px solid blue;
+}
 
 </style>
 
@@ -25,10 +57,97 @@
   <title>jQuery UI Example</title>
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="https://kit.fontawesome.com/8097e3cf9a.js" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src= "https://wayne.cool/js/jquery.youtubebackground.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
 </head>
 <body>
+
+<button id="animationBtn" class="animation-control-btn">
+  <i class="fa-brands fa-css3-alt"></i>
+</button>
+
+<select id="animationList" class="animation-dropdown" style="display: none;">
+  <option value="">Choose an Animation</option>
+  <option value="animate__bounce">Bounce</option>
+  <option value="animate__fadeIn">Fade In</option>
+  <option value="animate__rubberBand">Rubber Band</option>
+  <option value="animate__flip">Flip</option>
+  <!-- Add more animations from Animate.css as needed -->
+</select>
+
+<button id="playAnimationBtn" class="animation-play-btn">
+    <i class="fa-solid fa-play"></i> Play Animation
+</button>
+
+<div id="cssPropertiesPanel" style="position: fixed; right: 0; top: 0; width: 300px; background: #f0f0f0; padding: 20px; height: 100vh; overflow-y: auto;">
+  <h3>CSS Properties</h3>
+  <div>
+    <label for="max-width">Max Width:</label>
+    <input type="text" id="maxWidth" placeholder="e.g., 100px or 100%">
+  </div>
+  <div>
+    <label for="border-width">Border Width:</label>
+    <input type="text" id="borderWidth" placeholder="e.g., 1px">
+    
+    <label for="border-type">Border Type:</label>
+    <select id="borderType">
+      <option value="solid">Solid</option>
+      <option value="dotted">Dotted</option>
+      <option value="dashed">Dashed</option>
+	  <option value="none">none</option>
+    </select>
+  </div>
+  <div>
+    <label for="height">Height:</label>
+    <input type="text" id="height" placeholder="e.g., 100px">
+  </div>
+  <div>
+    <label for="padding">Padding:</label>
+    <input type="text" id="padding" placeholder="e.g., 10px">
+  </div>
+  <div>
+    <label for="margin">Margin:</label>
+    <input type="text" id="margin" placeholder="e.g., 10px">
+  </div>
+  <div>
+    <label>Position:</label>
+    <select id="position">
+      <option value="">Select position</option>
+      <option value="static">Static</option>
+      <option value="relative">Relative</option>
+      <option value="absolute">Absolute</option>
+      <option value="fixed">Fixed</option>
+    </select>
+  </div>
+  <div>
+    <label>Float:</label>
+    <select id="float">
+      <option value="none">None</option>
+      <option value="left">Left</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+  <button id="applyCss">Apply</button>
+</div>
+
+
+<div id="textRegionTemplate" style="display: none;">
+    <div class="text-region">
+	<div class="text-region-editable">
+        <p contenteditable="true" class="editable-content">Your editable text here</p>
+	</div>
+        <div class="text-region-controls">
+            <button class="color-change-btn">
+                <i class="fa-solid fa-brush"></i>
+            </button>
+            <input type="color" class="color-picker" style="display:none;">
+        </div>
+    </div>
+</div>
+
 
   <!-- Interaction events -->
 <div id="fontStyleBar" style="position: fixed; right: 20px; top: 20px;">
@@ -38,26 +157,186 @@
   <input type="color" id="fontColorPicker" hidden>
 </div>
 
+<button id="youtubeBtn">
+    <i class="fa-brands fa-youtube"></i> Add YouTube Video
+</button>
+
 <button id="btnAddImage"><i class="fa-regular fa-image"></i></button>
 
   <!-- Button to spawn new draggable/resizable paragraph -->
   <button id="addParagraphBtn">  
   <i class="fa-solid fa-plus"></i>
   <i class="fa-solid fa-text-height"></i>
+<!-- Container where new text regions will be appended -->
+<div id="textRegionsContainer"></div>
+
   </button>
-  
+	<button id="deleteBtn">
+		<i class="fa-solid fa-delete-left"></i>
+	</button>
+
   <!-- exportable viewport -->
 <div id="contentArea">
+  <div id="background-video" class="background-video">
+	</div>
   <div id="container" style="min-height: 400px; width: 100%; border: 1px solid #ccc;"></div>
 </div>
      <button id="exportBtn"><i class="fa-solid fa-file-export"></i></button>
 
   <script>
+  
+$('.editable-content, .draggable').click(function(e) {
+    e.stopPropagation(); // Prevent the click from affecting parent elements
+
+    // Remove the selection class from previously selected elements
+    $('.selected-for-css').removeClass('selected-for-css');
+
+    // Add the selection class to the clicked element
+    $(this).addClass('selected-for-css');
+});
+
+
+// Deselect when clicking elsewhere
+$(document).click(function() {
+    $('.editable-content, .draggable').removeClass('selected-for-css');
+});
+
+$('#playAnimationBtn').click(function() {
+    var animationName = $('#animationList').val();
+    var $selectedElement = $('.selected-for-css'); // Make sure this is the correct class for selected elements
+
+    if (animationName && $selectedElement.length) {
+        // Correctly apply the animation classes
+        $selectedElement.addClass(`animate__animated ${animationName}`);
+
+        $selectedElement.one('animationend', function() {
+            $(this).removeClass(`animate__animated ${animationName}`);
+        });
+    } else {
+        alert('Please select an element and an animation first.');
+    }
+});
+
+
+  $('.editable-content').click(function() {
+    // Remove CSS selection class from all other elements
+    $('.editable-content').not(this).removeClass('selected-for-css');
+
+    // Toggle CSS selection class on this element
+    $(this).toggleClass('selected-for-css');
+});
+
+  $('#playAnimationBtn').click(function() {
+    var animationName = $('#animationList').val(); // Get the selected animation
+    var $selectedElement = $('.selected-for-animation'); // Assuming this is your selection mechanism
+
+    // Function to apply and play the animation
+    function playAnimation($element, animation) {
+        // Remove previous animations
+        $element.removeClass(function(index, className) {
+            return (className.match(/(^|\s)animate__\S+/g) || []).join(' ');
+        });
+
+        // Add the animate.css classes
+        $element.addClass('animate__animated ' + animation);
+
+        // Optionally, remove the animation class on animation end to reset
+        $element.one('animationend', function() {
+            $(this).removeClass('animate__animated ' + animation);
+        });
+    }
+});
+
+  $('#animationBtn').click(function() {
+  $('#animationList').toggle(); // Show/hide the dropdown
+});
+$('#animationList').change(function() {
+  var animationName = $(this).val();
+  var $selectedElement = $('.selected-for-animation');
+
+  // Remove any previous animation classes
+  $selectedElement.removeClass(function(index, className) {
+    return (className.match(/(^|\s)animate__\S+/g) || []).join(' ');
+  });
+
+  // Add the selected animation class and animate__animated
+  $selectedElement.addClass('animate__animated ' + animationName);
+
+  // Optional: Remove the animation class upon completion to allow reapplication
+  $selectedElement.one('animationend', function() {
+    $(this).removeClass('animate__animated ' + animationName);
+  });
+});
+
+$('#applyCss').click(function() {
+    var $selectedElement = $('.selected-for-css'); // Ensure this is the consistent selector
+
+    // Apply CSS properties to $selectedElement
+    if($selectedElement.length) {
+        $selectedElement.css({
+            'max-width': $('#maxWidth').val(),
+            'border-width': $('#borderWidth').val(),
+            'border-style': $('#borderType').val(),
+            'height': $('#height').val(),
+            'padding': $('#padding').val(),
+            'margin': $('#margin').val(),
+            'position': $('#position').val(),
+            'float': $('#float').val(),
+        });
+    } else {
+        alert('Please select an element first.');
+    }
+});
+
+  
   $('#btnAddImage').click(function() {
     var imageUrl = prompt("Please enter the image URL:", "http://");
     if (imageUrl) {
         insertImage(imageUrl);
     }
+});
+
+$('.draggable').click(function() {
+    // Toggle the 'selected-for-deletion' class on this object
+    $(this).toggleClass('selected-for-css');
+});
+
+$(function() {
+	$('.draggable').click(function() {
+    // Remove the class from all other objects
+    $('.draggable').not(this).removeClass('selected-for-css');
+    
+    // Toggle the class on this object
+    $(this).toggleClass('selected-for-css');
+	});
+
+
+    // Click event on the delete button to remove the selected object
+$('#deleteBtn').click(function(event) {
+    event.stopPropagation(); // Prevent unintended click events outside
+
+    var $selectedElement = $('.selected-for-css'); // Assuming you've unified selection with this class
+    if ($selectedElement.length) {
+        $selectedElement.remove(); // Delete the selected element
+    } else {
+        alert('Please select an element first.'); // Feedback if no element is selected
+    }
+});
+
+// Unified deselection logic
+$(document).click(function(event) {
+    if (!$(event.target).closest('.draggable, #deleteBtn').length) {
+        // Assuming all interactive elements can be selected for deletion and have the 'draggable' class
+        $('.selected-for-css').removeClass('selected-for-css'); // Deselect upon clicking outside
+    }
+});
+
+});
+
+
+$(document).on('click', '.delete-btn', function() {
+    // 'this' refers to the button that was clicked
+    $(this).closest('.text-region').remove(); // This removes the text region
 });
 
 function downloadHtml(htmlContent, filename) {
@@ -77,6 +356,20 @@ $('#exportBtn').click(function() {
 
 function exportContent() {
     var $contentClone = $('#contentArea').clone();
+
+    $contentClone.find('.text-region').each(function() {
+        $(this).css({
+            'position': 'absolute', // Preserving the green background
+            'padding': '10px',
+			'right': '0px',
+			'left':'250px',
+			'top':'100px',
+			'background-color':'white',
+			'z-index':'9999',
+			'width': '250px',
+            // Any other styles that are essential for the look and feel
+        });
+    });
 
     // Remove the resizable and draggable attributes/classes
     $contentClone.find('.ui-resizable-handle').remove();
@@ -148,48 +441,98 @@ $(document).ready(function() {
         $(element).attr('contenteditable', 'false').focus(); // Make it editable and focus
         // Disable draggable when in edit mode to prevent conflicts
     }
+	
+	    $('#youtubeBtn').click(function() {
+        var videoUrl = prompt("Please enter the YouTube video link:");
+        if (videoUrl) {
+            // Extract the video ID from the URL
+            var videoId = videoUrl.split('v=')[1];
+            var ampersandPosition = videoId.indexOf('&');
+            if(ampersandPosition !== -1) {
+              videoId = videoId.substring(0, ampersandPosition);
+            }
+
+            // Assuming your page has an element for the YouTube player
+            $('#background-video').YTPlayer({
+                videoId: videoId,
+				fitToBackground: true,
+				mute: true,
+				repeat: true,
+				start: 0,
+				pauseOnScroll: false				// Use the extracted video ID
+                // other options...
+            });
+        }
+    });
 });
 
 $(function() {
-    // Setup delay and prevention mechanism for distinguishing between click and dblclick
-    let timer = 0;
-    let delay = 200; // Milliseconds
-    let prevent = false;
 
-    // Function to add a new draggable/resizable paragraph
-    function addDraggableParagraph() {
-        var $newParagraph = $('<p class="editable-text">Editable Text</p>').css({
-            'width': '200px',
-            'min-height': '50px', // Ensure there's enough room for text
-            'background-color': 'lightgreen',
-            'padding': '10px',
-            'cursor': 'text' // Change cursor to indicate text can be edited
-        }).draggable({
-            cancel: "p[contenteditable]" // Prevents dragging when editing text
-        }).resizable({
-            aspectRatio: true
-        });
+// Function to add a new draggable/resizable paragraph
+var delay = 200; // Delay in milliseconds
+var prevent = false; // Flag to prevent conflict between click and dblclick
+var timer = 0; // Timer to manage delay
 
-        // Append the new paragraph to the container
-        $("#container").append($newParagraph);
+// Function to add a new draggable/resizable paragraph
+function addDraggableParagraph() {
+    // Clone the template
+    var $newParagraph = $('#textRegionTemplate .text-region').clone();
 
-        // Attach click and dblclick events to the new paragraph
-        $newParagraph.click(function() {
-            const _this = this; // Cache this
+    // Make the paragraph visible
+    $newParagraph.css('display', '');
+
+    // Add draggable and resizable functionality
+    $newParagraph.draggable({
+        cancel: "p[contenteditable]" // Prevents dragging when editing text
+    }).resizable();
+
+    // Attach event handlers for single click, double click, and color change
+    attachEventHandlers($newParagraph);
+
+    // Append the new paragraph to the container
+    $("#container").append($newParagraph);
+}
+
+function attachEventHandlers($element) {
+    var delay = 200;
+    var prevent = false;
+    var timer = 0;
+
+    $element.on('click dblclick', function(e) {
+        var $this = $(this); // Cache the current element
+        if (e.type === 'dblclick') {
+            // Double-click: Make content editable
+            clearTimeout(timer);
+            prevent = true;
+            $this.attr('contenteditable', 'true').focus();
+        } else {
+            // Single click: Toggle selection
+            clearTimeout(timer);
             timer = setTimeout(function() {
                 if (!prevent) {
-                    // Single click, make sure it's not editable
-                    $(_this).attr('contenteditable', 'false');
+                    $this.toggleClass('selected-for-css');
+                    if ($this.hasClass('selected-for-css')) {
+                        $this.attr('contenteditable', 'false');
+                    }
                 }
                 prevent = false;
             }, delay);
-        }).dblclick(function() {
-            clearTimeout(timer);
-            prevent = true;
-            // Double click, make editable
-            $(this).attr('contenteditable', 'true').focus();
-        });
-    }
+        }
+    });
+
+    // Color change functionality adjustment
+    $element.find('.color-change-btn').click(function() {
+        $(this).siblings('.color-picker').click();
+    });
+
+    $element.find('.color-picker').on('input change', function() {
+        // Ensure the background color change applies to the .text-region container
+        $(this).closest('.text-region').css('background-color', $(this).val());
+    });
+}
+
+// Example usage: Add draggable paragraph on button click
+
 
     // Example usage: Adding a paragraph on some action, e.g., button click
     $('#addParagraphBtn').click(function() {
